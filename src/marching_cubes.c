@@ -1,6 +1,18 @@
 #include <stdint.h>
 
-#include "game.h"
+#include "marching_cubes.h"
+
+#ifndef DENSITY_FUNCTION_H
+#include "density_function.h"
+#endif
+
+#ifndef VECTOR_H
+#include "vector.h"
+#endif
+
+#ifndef VERTEX_ARRAY_H
+#include "vertex_array.h"
+#endif
 
 static uint32_t EDGE_TABLE[] = { 
     0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f,
@@ -325,7 +337,7 @@ int32_t get_cube_index(struct cube_t *cb) {
 }
 
 void update_cube(
-  struct vertex_array_t *vertex_list, 
+  struct vertex_array_t *va, 
   void *env, density_function_t d, 
   struct vector_t *p, double dx
 ) {
@@ -353,10 +365,27 @@ void update_cube(
 
   // create faces
   int8_t *tri_index = TRI_TABLE[cube_index];
+  struct vector_t *a, *b, *c, da, db, n;
+
   while(*tri_index != -1) {
-    vector_copy(&vertex_list->v[vertex_list->tail], &ep[*tri_index]);
-    ++tri_index;
-    ++vertex_list->tail;
+    a = ep + tri_index[0];
+    b = ep + tri_index[1];
+    c = ep + tri_index[2];
+    
+    vector_minus(&da, b, 1.0, a);
+    vector_minus(&db, c, 1.0, b);
+    vector_cross(&n, &da, &db);
+    
+    vector_copy(va->v + va->tail + 0, a);
+    vector_copy(va->v + va->tail + 1, b);
+    vector_copy(va->v + va->tail + 2, c);
+
+    vector_copy(va->n + va->tail + 0, &n);
+    vector_copy(va->n + va->tail + 1, &n);
+    vector_copy(va->n + va->tail + 2, &n);
+
+    tri_index += 3;
+    va->tail += 3;
   }
 }
 

@@ -3,7 +3,17 @@
 #include <string.h>
 #include <math.h>
 
+#ifndef GAME_H
 #include "game.h"
+#endif
+
+#ifndef VERTEX_ARRAY_H
+#include "vertex_array.h"
+#endif
+
+#ifndef NEW_H
+#include "new.h"
+#endif
 
 void glutLeaveMainLoop();
 
@@ -19,18 +29,6 @@ struct vector_t U2 = { { 0.0, 0.0, 1.0, 1.0 } };
 struct vector_t ZERO = { { 0.0, 0.0, 0.0, 1.0 } };
 struct vector_t ONES = { { 1.0, 1.0, 1.0, 1.0 } };
 
-#define NEW(type) (type *)malloc(sizeof(type))
-#define NEW_ARRAY(type, len) (type *)calloc(len, sizeof(type))
-
-struct vertex_array_t *vertex_array_new(int len) {
-  struct vertex_array_t *vertex_array = NEW(struct vertex_array_t);
-  vertex_array->len  = len;
-  vertex_array->tail = 0;
-  vertex_array->v = NEW_ARRAY(struct vector_t, len);
-  vertex_array->n = NEW_ARRAY(struct vector_t, len);
-  return vertex_array;
-}
-
 // i (u2 v3 - u3 v2)
 // j (u1 v3 - u3 v1)
 // k (u1 v2 - u2 v1)
@@ -39,77 +37,6 @@ struct vertex_array_t *vertex_array_new(int len) {
 // j (u0 v2 - u2 v0)
 // k (u0 v1 - u1 v0)
 
-void vector_cross(struct vector_t *r, struct vector_t *a, struct vector_t *b) {
-  r->v[0] = (a->v[1] * b->v[2]) - (a->v[2] * b->v[1]);
-  r->v[1] = (a->v[0] * b->v[2]) - (a->v[2] * b->v[0]);
-  r->v[2] = (a->v[0] * b->v[1]) - (a->v[1] * b->v[0]);
-  r->v[3] = a->v[3] * b->v[3];
-}
-
-double vector_length_squared(struct vector_t *a) {
-  return (a->v[0] * a->v[0] + a->v[1] * a->v[1] + a->v[2] * a->v[2]) 
-    / (a->v[3] * a->v[3]);
-}
-
-void vector_normalize(struct vector_t *r, struct vector_t *a) {
-  double l = vector_length_squared(a);
-  r->v[0] = a->v[0];
-  r->v[1] = a->v[1];
-  r->v[2] = a->v[2];
-  r->v[3] = sqrt(l);
-}  
-
-double vector_dot(struct vector_t *a, struct vector_t *b) {
-  double r = 0;
-  int i;
-  for(i=0;i<3;++i) {
-    r += a->v[i] * b->v[i];
-  }
-  r /= a->v[3] * b->v[3];
-  return r;
-}
-
-void vector_minus(struct vector_t *r, struct vector_t *a, double alpha, struct vector_t *b) {
-  int i;
-  for(i=0;i<3;++i) {
-    r->v[i] = a->v[i] / a->v[3] - (alpha * (b->v[i] / b->v[3]));
-  }
-  r->v[3] = 1.0;
-}
-
-void vector_set(struct vector_t *r, double x, double y, double z) {
-  r->v[0] = x;
-  r->v[1] = y;
-  r->v[2] = z;
-  r->v[3] = 1.0;
-}
-
-void vector_plus(struct vector_t *r, struct vector_t *a, double alpha, struct vector_t *b) {
-  int i;
-  for(i=0;i<3;++i) {
-    r->v[i] = a->v[i] / a->v[3] + (alpha * (b->v[i] / b->v[3]));
-  }
-  r->v[3] = 1.0;
-}
-
-void vector_times(struct vector_t *r, struct vector_t *a, double b) {
-  int i;
-  for(i=0;i<3;++i) {
-    r->v[i] = a->v[i];
-  }
-  r->v[3] = a->v[3] / b;
-}
-
-void vector_copy(struct vector_t *r, struct vector_t *a) {
-  memcpy(r, a, sizeof(struct vector_t));
-}
-
-void fvector_copy_vector(struct fvector_t *r, struct vector_t *a) {
-  int i;
-  for(i=0;i<4;++i) {
-    r->v[i] = a->v[i];
-  }
-}
 
 
 void face_normal(struct vector_t *v, struct vector_t *n) {

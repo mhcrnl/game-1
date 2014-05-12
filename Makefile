@@ -1,20 +1,29 @@
 all: build/game
 
-C_SOURCES=game.c marching_cubes.c
+C_FILES = $(shell ls src/*.c)
+DEPS    = $(C_FILES:src/%.c=build/%.deps)
+OBJS    = $(C_FILES:src/%.c=build/%.o)
+CC      = gcc
 
-all: build/game build/cube
+all: build/game build/TAGS $(DEPS)
 
 clean:
 	rm -rf build
 
-build/game: $(C_SOURCES) 
+build/TAGS: $(C_FILES)
+	etags -o $@ $^
+
+build/game: $(OBJS) 
 	mkdir -p build
 	$(CC) -ggdb -O3 -Wall -o $@ $^ -lGL -lglut -lGLU -lm
 
-build/cube: cube.c
-	mkdir -p build
-	$(CC) -ggdb -O2 -Wall -o $@ $^ -lGL -lglut -lGLU -lm
+build/%.o : src/%.c
+	$(CC) -c -ggdb -O2 -Wall -o $@ $^ -lGL -lglut -lGLU -lm
 
+build/%.deps : src/%.c
+	$(CC) -M -o $@ $^
+
+include $(DEPS)
 
 .PHONY: all
 
