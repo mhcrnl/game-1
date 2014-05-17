@@ -5,8 +5,13 @@
 #include "vector.h"
 #endif
 
+#ifndef DENSITY_FIELD_H
+#include "density_field.h"
+#endif
+
 struct state_t {
   struct vertex_array_t *box;
+  struct density_field_t *field;
   struct vector_t      pos;
   struct vector_t      fow;
   struct vector_t      left;

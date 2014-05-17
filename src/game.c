@@ -15,6 +15,10 @@
 #include "new.h"
 #endif
 
+#ifndef MARCHING_CUBES_H
+#include "marching_cubes.h"
+#endif
+
 void glutLeaveMainLoop();
 
 float COLOR_RED[]      = {1.0, 0.0, 0.0, 1.0};  
@@ -303,8 +307,10 @@ void display(void) {
 
 void init(void) {
   game_state.box = cube(&ZERO, 5);
-  vector_set(&game_state.pos, 0, 0, 0);
-  game_state.a1 = - 3.24159 / 2;
+  game_state.field = spherical_density_field_new(&ZERO, 5);
+
+  vector_set(&game_state.pos, 0, 0, -10);
+  game_state.a1 = 0;
   game_state.a2 = 0;
   game_state.px = 0;
   game_state.py = 0;

@@ -2,8 +2,8 @@
 
 #include "marching_cubes.h"
 
-#ifndef DENSITY_FUNCTION_H
-#include "density_function.h"
+#ifndef DENSITY_FIELD_H
+#include "density_field.h"
 #endif
 
 #ifndef VECTOR_H
@@ -317,11 +317,11 @@ static uint8_t EDGE_INDEX[][2] = {
   { 3, 7 } 
 };
 
-void get_cube(struct cube_t *cb, void *env, density_function_t d, struct vector_t *p, double dx) {
+void get_cube(struct cube_t *cb, struct density_field_t *d, struct vector_t *p, double dx) {
   int i;
   for(i=0;i<8;++i) {
     vector_plus(&cb->p[i], p, dx, &CUBE_VERTS_TABLE[i]); 
-    cb->d[i] = d(env, &cb->p[i]);
+    cb->d[i] = d->density(d, &cb->p[i]);
   }
 }
 
@@ -338,7 +338,7 @@ int32_t get_cube_index(struct cube_t *cb) {
 
 void update_cube(
   struct vertex_array_t *va, 
-  void *env, density_function_t d, 
+  struct density_field_t *d, 
   struct vector_t *p, double dx
 ) {
   struct cube_t cb;
@@ -346,7 +346,7 @@ void update_cube(
   struct vector_t ep[12], dp;
   double d1, d2, alpha;
 
-  get_cube(&cb, env, d, p, dx);
+  get_cube(&cb, d, p, dx);
   cube_index = get_cube_index(&cb);
   edge_mask = EDGE_TABLE[cube_index];
 
