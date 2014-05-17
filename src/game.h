@@ -15,9 +15,13 @@ struct state_t {
   struct vector_t      pos;
   struct vector_t      fow;
   struct vector_t      left;
+  int                  mx;
+  int                  mz;
+  struct timespec      last_update;
   double a1, a2;
   int    px, py;
   int    button_down;
+  int    quit;
 };
 
 

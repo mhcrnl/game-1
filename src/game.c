@@ -1,7 +1,9 @@
-#include <GL/glut.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #ifndef GAME_H
 #include "game.h"
@@ -177,28 +179,60 @@ void motion(int x, int y) {
   game_state.py = y;
 }
 
-void keyboard(unsigned char key, int x, int y) {
+void key_up(unsigned char key, int x, int y) {
   switch(key) {
-  case 'q':
-    glutLeaveMainLoop();
-    break;
   case 'a':
-    vector_plus(&game_state.pos, &game_state.pos, 1.0, &game_state.left);
-    glutPostRedisplay();
+    game_state.mx = 0;
     break;
   case 'd':
-    vector_minus(&game_state.pos, &game_state.pos, 1.0, &game_state.left);
-    glutPostRedisplay();
+    game_state.mx = 0;
     break;
   case 'w':
-    vector_plus(&game_state.pos, &game_state.pos, 1.0, &game_state.fow);
-    glutPostRedisplay();
+    game_state.mz = 0;
     break;
   case 's':
-    vector_minus(&game_state.pos, &game_state.pos, 1.0, &game_state.fow);
-    glutPostRedisplay();
+    game_state.mz = 0;
     break;
   }
+}
+
+void key_down(unsigned char key, int x, int y) {
+  switch(key) {
+  case 'q':
+    game_state.quit = 1;
+    break;
+  case 'a':
+    game_state.mx = 1;
+    break;
+  case 'd':
+    game_state.mx = -1;
+    break;
+  case 'w':
+    game_state.mz = 1;
+    break;
+  case 's':
+    game_state.mz = -1;
+    break;
+  }
+}
+
+void time_minus(double *dt, struct timespec *after, struct timespec *before) {
+  *dt = after->tv_sec - before->tv_sec;
+  *dt += (after->tv_nsec - before->tv_nsec) / 1e9;
+}
+
+void anim() {
+  struct timespec now;
+  double dt;
+
+  clock_gettime(CLOCK_REALTIME, &now);
+  time_minus(&dt, &now, &game_state.last_update);
+  dt *= 20;
+
+  vector_plus(&game_state.pos, &game_state.pos, dt * game_state.mx, &game_state.left);
+  vector_plus(&game_state.pos, &game_state.pos, dt * game_state.mz, &game_state.fow);
+
+  game_state.last_update = now;
 }
 
 void gl_vertex(struct vector_t *v) {
@@ -306,10 +340,13 @@ void display(void) {
 }
 
 void init(void) {
+  game_state.quit = 0;
   game_state.box = cube(&ZERO, 5);
   game_state.field = spherical_density_field_new(&ZERO, 5);
 
   vector_set(&game_state.pos, 0, 0, -10);
+  clock_gettime(CLOCK_REALTIME, &game_state.last_update);
+
   game_state.a1 = 0;
   game_state.a2 = 0;
   game_state.px = 0;
@@ -326,16 +363,26 @@ void init(void) {
   gluPerspective(40.0, 1.0, 1.0, 10000.0);
 }
 
+void fgDeinitialize( void );
+
 int main(int argc, char **argv)
 {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutCreateWindow("red 3D lighted cube");
-  glutDisplayFunc(display);
   glutMouseFunc(mouse);
   glutMotionFunc(motion);
-  glutKeyboardFunc(keyboard);
+  glutKeyboardFunc(key_down);
+  glutKeyboardUpFunc(key_up);
   init();
-  glutMainLoop();
+
+  while(! game_state.quit) {
+    display();
+    anim();
+    glutMainLoopEvent();
+  }
+
+  fgDeinitialize();
+
   return 0;             /* ANSI C requires main to return int. */
 }
