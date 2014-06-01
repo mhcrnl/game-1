@@ -17,3 +17,15 @@ struct vertex_array_t *vertex_array_new(int len) {
   return vertex_array;
 }
 
+void vertex_array_add_line(struct vertex_array_t *va, 
+                                             struct vector_t *p0, 
+                                             struct vector_t *p1)
+{
+  if ( va->tail+2 < va->len ) {
+    vector_copy(&va->v[va->tail], p0);
+    vector_copy(&va->v[va->tail+1], p1);
+    vector_copy(&va->n[va->tail], p0);
+    vector_copy(&va->n[va->tail+1], p1);
+    va->tail += 2;
+  }
+}

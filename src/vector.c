@@ -3,6 +3,12 @@
 #include <math.h>
 #include <string.h>
 
+struct vector_t U0 = { { 1.0, 0.0, 0.0, 1.0 } };
+struct vector_t U1 = { { 0.0, 1.0, 0.0, 1.0 } };
+struct vector_t U2 = { { 0.0, 0.0, 1.0, 1.0 } };
+struct vector_t ZERO = { { 0.0, 0.0, 0.0, 1.0 } };
+struct vector_t ONES = { { 1.0, 1.0, 1.0, 1.0 } };
+
 void vector_cross(struct vector_t *r, struct vector_t *a, struct vector_t *b) {
   r->v[0] = (a->v[1] * b->v[2]) - (a->v[2] * b->v[1]);
   r->v[1] = (a->v[0] * b->v[2]) - (a->v[2] * b->v[0]);
@@ -70,6 +76,13 @@ void vector_times(struct vector_t *r, struct vector_t *a, double b) {
 
 void vector_copy(struct vector_t *r, struct vector_t *a) {
   memcpy(r, a, sizeof(struct vector_t));
+}
+
+void fvector_set(struct fvector_t *r, float x, float y, float z) {
+  r->v[0] = x;
+  r->v[1] = y;
+  r->v[2] = z;
+  r->v[3] = 1;
 }
 
 void fvector_copy_vector(struct fvector_t *r, struct vector_t *a) {

@@ -21,11 +21,11 @@ build/game: $(OBJS)
 
 build/%.o : src/%.c
 	mkdir -p build
-	$(CC) -c $(CFLAGS) -o $@ $^ -lGL -lglut -lGLU -lm
+	$(CC) -c $(CFLAGS) -o $@ $< -lGL -lglut -lGLU -lm
 
 build/%.deps : src/%.c
 	mkdir -p build
-	$(CC) -M -o $@ $^
+	$(CC) -MM -MT $(<:src/%.c=build/%.o) -o $@ $<
 
 include $(DEPS)
 

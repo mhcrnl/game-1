@@ -8,4 +8,11 @@ struct vertex_array_t {
   struct vector_t *n;
 };
 
+struct vertex_array_t *vertex_array_new(int len);
+void vertex_array_add_line(
+                           struct vertex_array_t *va, 
+                           struct vector_t *p0, 
+                           struct vector_t *p1
+                           );
+
 #endif

@@ -5,18 +5,9 @@
 #include <stdio.h>
 
 #include "marching_cubes.h"
-
-#ifndef DENSITY_FIELD_H
 #include "density_field.h"
-#endif
-
-#ifndef VECTOR_H
 #include "vector.h"
-#endif
-
-#ifndef VERTEX_ARRAY_H
 #include "vertex_array.h"
-#endif
 
 static uint32_t EDGE_TABLE[] = { 
     0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f,
@@ -343,6 +334,7 @@ int32_t get_cube_index(struct cube_t *cb) {
 
 void render_field(
   struct vertex_array_t *va, 
+  struct vertex_array_t *va_lines,
   struct density_field_t *f, 
   struct vector_t *c,
   double d,
@@ -355,22 +347,29 @@ void render_field(
       for(k=-n;k<n;++k) {
         vector_set(&dp, i*d, j*d, k*d);
         vector_plus(&p, c, 1.0, &dp);
-        update_cube(va, f, &p, d);
+        update_cube(va, va_lines, f, &p, d);
       }
     }
   }        
 }
 
+void update_lines(
+                  struct vertex_array_t *va,
+                  struct vector_t *p, double dx) 
+{
+}
+
 void update_cube(
   struct vertex_array_t *va, 
+  struct vertex_array_t *va_lines,
   struct density_field_t *f, 
   struct vector_t *p, double dx
 ) {
   struct cube_t cb;
   uint32_t edge_mask, v0, v1, cube_index, i;
   struct vector_t ep[12], dp, ep1, ep2;
-  double d1, d2, alpha, e;
-  struct vector_t *a, *b, *c, da, db, n;
+  double d1, d2, alpha;
+  struct vector_t *a, *b, *c;
 
   get_cube(&cb, f, p, dx);
   cube_index = get_cube_index(&cb);
@@ -397,10 +396,6 @@ void update_cube(
         alpha = d1 / (d1 - d2);
         vector_minus(&dp, &ep2, 1.0, &ep1);
         vector_plus(&ep[i], &ep1, alpha, &dp);
-        e = fabs(f->density(f, &ep[i]));
-        if ( e > 0.000065 ) {
-          printf("Error: %f\n", e);
-        } 
       } 
     }
 
@@ -411,18 +406,14 @@ void update_cube(
       a = ep + tri_index[0];
       b = ep + tri_index[1];
       c = ep + tri_index[2];
-      
-      vector_minus(&da, b, 1.0, a);
-      vector_minus(&db, c, 1.0, b);
-      vector_cross(&n, &da, &db);
+
+      f->normal(f, a, va->n + va->tail + 0);
+      f->normal(f, b, va->n + va->tail + 1);
+      f->normal(f, c, va->n + va->tail + 2);
       
       vector_copy(va->v + va->tail + 0, a);
       vector_copy(va->v + va->tail + 1, b);
       vector_copy(va->v + va->tail + 2, c);
-      
-      vector_copy(va->n + va->tail + 0, &n);
-      vector_copy(va->n + va->tail + 1, &n);
-      vector_copy(va->n + va->tail + 2, &n);
       
       tri_index += 3;
       va->tail += 3;

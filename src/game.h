@@ -22,7 +22,8 @@ struct state_t {
   int    button_down;
   int    quit;
 
-  struct vertex_array_t *va;
+  struct vertex_array_t *va_tri;
+  struct vertex_array_t *va_lines;
   struct density_field_t *field;
 };
 

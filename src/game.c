@@ -5,21 +5,13 @@
 #include <math.h>
 #include <time.h>
 
-#ifndef GAME_H
 #include "game.h"
-#endif
-
-#ifndef VERTEX_ARRAY_H
+#include "cube.h"
 #include "vertex_array.h"
-#endif
-
-#ifndef NEW_H
 #include "new.h"
-#endif
-
-#ifndef MARCHING_CUBES_H
 #include "marching_cubes.h"
-#endif
+#include "draw.h"
+#include "grid.h"
 
 void glutLeaveMainLoop();
 
@@ -28,12 +20,6 @@ float COLOR_YELLOW[]   = {1.0, 1.0, 0.0, 1.0};
 float COLOR_WHITE[]    = {1.0, 1.0, 1.0, 1.0};  
 float COLOR_GRAY2[]     = {0.2, 0.2, 0.2, 1.0};  
 float COLOR_GRAY9[]     = {0.9, 0.9, 0.9, 1.0};  
-
-struct vector_t U0 = { { 1.0, 0.0, 0.0, 1.0 } };
-struct vector_t U1 = { { 0.0, 1.0, 0.0, 1.0 } };
-struct vector_t U2 = { { 0.0, 0.0, 1.0, 1.0 } };
-struct vector_t ZERO = { { 0.0, 0.0, 0.0, 1.0 } };
-struct vector_t ONES = { { 1.0, 1.0, 1.0, 1.0 } };
 
 // i (u2 v3 - u3 v2)
 // j (u1 v3 - u3 v1)
@@ -61,102 +47,6 @@ void vertex_array_normals(struct vertex_array_t *f) {
   for(i=0;i<f->tail;i+=3) {
     face_normal(f->v + i, f->n + i);
   }
-}
-
-void vector_face(
-  struct vector_t *r, struct vector_t *p, struct vector_t *d, 
-  double ux, double uy, double uz
-) {
-  r->v[0] = p->v[0]/d->v[3] + (d->v[0]/d->v[3] * ux);
-  r->v[1] = p->v[1]/d->v[3] + (d->v[1]/d->v[3] * uy);
-  r->v[2] = p->v[2]/d->v[3] + (d->v[2]/d->v[3] * uz);
-  r->v[3] = 1.0;
-}
-
-void quad(struct vertex_array_t *va, struct vector_t *p, struct vector_t *n, struct vector_t *u, double s) {
-  
-  struct vector_t r;
-
-  struct vector_t *a, *b, *c, *n1, *n2, *n3;
-
-  vector_cross(&r, n, u);
-  
-  if ( 1 ) {
-
-  a  = va->v + va->tail + 0;
-  b  = va->v + va->tail + 1;
-  c  = va->v + va->tail + 2;
-
-  n1 = va->n + va->tail + 0;
-  n2 = va->n + va->tail + 1;
-  n3 = va->n + va->tail + 2;
-
-  va->tail += 3;
-
-  vector_plus(a, p, -s, u);
-  vector_plus(a, a, -s, &r);
-
-  vector_plus(b, p, s,  u);
-  vector_plus(b, b, -s, &r);
-
-  vector_plus(c, p,  s, u);
-  vector_plus(c, c,  s, &r);
-
-  vector_copy(n1, n);
-  vector_copy(n2, n);
-  vector_copy(n3, n);
-
-  }
-
-  if ( 1 ) {
-  a  = va->v + va->tail + 0;
-  b  = va->v + va->tail + 1;
-  c  = va->v + va->tail + 2;
-
-  n1 = va->n + va->tail + 0;
-  n2 = va->n + va->tail + 1;
-  n3 = va->n + va->tail + 2;
-
-  va->tail += 3;
-
-  vector_plus(a, p, s, u);
-  vector_plus(a, a, s, &r);
-
-  vector_plus(b, p, -s, u);
-  vector_plus(b, b,  s, &r);
-
-  vector_plus(c, p, -s, u);
-  vector_plus(c, c, -s, &r);
-
-  vector_copy(n1, n);
-  vector_copy(n2, n);
-  vector_copy(n3, n);
-
-  }
-}
-
-struct vertex_array_t *cube(struct vector_t *p0, double s) {
-  struct vertex_array_t *va = vertex_array_new(12*3);
-
-  struct vector_t n, p, u;
-  int    i, j, k;
-
-  for(i=0; i<3; ++i) {
-    for(j=0; j<2; ++j) {
-      for(k = 0; k<3; ++k) {
-        n.v[k] = (k == i) ? (j == 0 ? 1.0 : -1.0) : 0.0;
-      }
-      n.v[3] = 1.0;
-      if (i == 1) {
-        vector_set(&u, 1, 0, 0);
-      } else {
-        vector_set(&u, 0, 1, 0);
-      }
-      vector_plus(&p, p0, s, &n);
-      quad(va, &p, &n, &u, s);
-    }
-  }
-  return va;
 }
 
 struct state_t game_state;
@@ -235,59 +125,6 @@ void anim() {
   game_state.last_update = now;
 }
 
-void gl_vertex(struct vector_t *v) {
-  glVertex4d(v->v[0], v->v[1], v->v[2], v->v[3]);
-}
-
-void gl_normal(struct vector_t *v) {
-  glNormal3d(v->v[0]/v->v[3], v->v[1]/v->v[3], v->v[2]/v->v[3]);
-}
-
-void vertex_array_draw(struct vertex_array_t *f) {
-  int i;
-  struct vector_t *n, *v;
-
-  n = f->n;
-  v = f->v;
-
-  glBegin(GL_TRIANGLES);
-  for(i=0; i<f->tail; i++) {
-    gl_normal(n);
-    gl_vertex(v);
-    ++n;
-    ++v;
-  }
-  glEnd();
-
-  #if 0
-  struct vector_t v2;
-  v = f->v;
-  n = f->n;
-  glBegin(GL_LINES);
-  for(i=0; i<f->tail; ++i) {
-    gl_vertex(v);
-    vector_plus(&v2, v, 5.0, n);
-    gl_vertex(&v2);
-    ++v, ++n;
-  }
-  glEnd();
-  #endif
-
-  
-}
-
-double vx(struct vector_t *v) {
-  return v->v[0] / v->v[3];
-}
-
-double vy(struct vector_t *v) {
-  return v->v[1] / v->v[3];
-}
-
-double vz(struct vector_t *v) {
-  return v->v[2] / v->v[3];
-}
-
 void print_vector(char *name, struct vector_t *v) {
   printf("%s: %02.2f %02.2f %02.2f\n", name, v->v[0]/v->v[3], v->v[1]/v->v[3], v->v[2]/v->v[3]);
 }
@@ -298,6 +135,7 @@ void display(void) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
+  struct fvector_t light_pos;
   struct fvector_t fpos, ffow;
   struct vector_t  *pos    = &game_state.pos;
   struct vector_t  *fow    = &game_state.fow;
@@ -327,7 +165,8 @@ void display(void) {
   fvector_copy_vector(&fpos, pos);
   fvector_copy_vector(&ffow, fow);
 
-  glLightfv(GL_LIGHT0, GL_POSITION, fpos.v);
+  fvector_set(&light_pos, -10, -10, -10);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_pos.v);
   glLightfv(GL_LIGHT0, GL_DIFFUSE,  COLOR_GRAY9);
   glLightfv(GL_LIGHT0, GL_AMBIENT,  COLOR_GRAY2);
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -339,7 +178,9 @@ void display(void) {
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, COLOR_YELLOW);
   // vertex_array_draw(game_state.box);
 
-  vertex_array_draw(game_state.va);
+  // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  vertex_array_draw_tri(game_state.va_tri);
+  vertex_array_draw_lines(game_state.va_lines);
 
   glutSwapBuffers();
 }
@@ -347,10 +188,13 @@ void display(void) {
 void init(void) {
 
   game_state.quit = 0;
-  game_state.box = cube(&ZERO, 5);
-  game_state.va  = vertex_array_new(100000);
+  game_state.box = vertex_array_new(36);
+  cube(game_state.box, &ZERO, 5);
+  game_state.va_tri  = vertex_array_new(100000);
+  game_state.va_lines  = vertex_array_new(100000);
   game_state.field = spherical_density_field_new(&ZERO, 10);
-  render_field(game_state.va, game_state.field, &ZERO, 0.5, 20);
+  render_field(game_state.va_tri, game_state.va_lines, game_state.field, &ZERO, 2, 20);
+  //  render_grid(game_state.va_lines, &ZERO, 0.5, 20);
 
   vector_set(&game_state.pos, 0, 0, -10);
   clock_gettime(CLOCK_REALTIME, &game_state.last_update);
