@@ -15,6 +15,10 @@ double vector_length_squared(struct vector_t *a) {
     / (a->v[3] * a->v[3]);
 }
 
+double vector_length(struct vector_t *a) {
+  return sqrt(vector_length_squared(a));
+}
+
 void vector_normalize(struct vector_t *r, struct vector_t *a) {
   double l = vector_length_squared(a);
   r->v[0] = a->v[0];

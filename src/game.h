@@ -11,7 +11,6 @@
 
 struct state_t {
   struct vertex_array_t *box;
-  struct density_field_t *field;
   struct vector_t      pos;
   struct vector_t      fow;
   struct vector_t      left;
@@ -22,6 +21,9 @@ struct state_t {
   int    px, py;
   int    button_down;
   int    quit;
+
+  struct vertex_array_t *va;
+  struct density_field_t *field;
 };
 
 

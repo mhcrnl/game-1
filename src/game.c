@@ -227,7 +227,7 @@ void anim() {
 
   clock_gettime(CLOCK_REALTIME, &now);
   time_minus(&dt, &now, &game_state.last_update);
-  dt *= 20;
+  dt *= 5;
 
   vector_plus(&game_state.pos, &game_state.pos, dt * game_state.mx, &game_state.left);
   vector_plus(&game_state.pos, &game_state.pos, dt * game_state.mz, &game_state.fow);
@@ -259,6 +259,7 @@ void vertex_array_draw(struct vertex_array_t *f) {
   }
   glEnd();
 
+  #if 0
   struct vector_t v2;
   v = f->v;
   n = f->n;
@@ -270,6 +271,7 @@ void vertex_array_draw(struct vertex_array_t *f) {
     ++v, ++n;
   }
   glEnd();
+  #endif
 
   
 }
@@ -335,14 +337,20 @@ void display(void) {
 
   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, COLOR_YELLOW);
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, COLOR_YELLOW);
-  vertex_array_draw(game_state.box);
+  // vertex_array_draw(game_state.box);
+
+  vertex_array_draw(game_state.va);
+
   glutSwapBuffers();
 }
 
 void init(void) {
+
   game_state.quit = 0;
   game_state.box = cube(&ZERO, 5);
-  game_state.field = spherical_density_field_new(&ZERO, 5);
+  game_state.va  = vertex_array_new(100000);
+  game_state.field = spherical_density_field_new(&ZERO, 10);
+  render_field(game_state.va, game_state.field, &ZERO, 0.5, 20);
 
   vector_set(&game_state.pos, 0, 0, -10);
   clock_gettime(CLOCK_REALTIME, &game_state.last_update);
@@ -369,6 +377,7 @@ int main(int argc, char **argv)
 {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+  glutInitWindowSize(1000, 1000);
   glutCreateWindow("red 3D lighted cube");
   glutMouseFunc(mouse);
   glutMotionFunc(motion);

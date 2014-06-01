@@ -1,4 +1,8 @@
 #include <stdint.h>
+#include <assert.h>
+#include <string.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "marching_cubes.h"
 
@@ -288,7 +292,8 @@ int8_t TRI_TABLE[][32]      = {
   { 1, 10, 2, -1 },
   { 1, 3, 8, 9, 1, 8, -1 },
   { 0, 9, 1, -1 },
-  { 0, 3, 8, -1 } 
+  { 0, 3, 8, -1 },
+  { -1 }
 };
 
 static struct vector_t CUBE_VERTS_TABLE[] = { 
@@ -336,56 +341,92 @@ int32_t get_cube_index(struct cube_t *cb) {
   return index;
 }
 
+void render_field(
+  struct vertex_array_t *va, 
+  struct density_field_t *f, 
+  struct vector_t *c,
+  double d,
+  int n)
+{
+  int i, j, k;
+  struct vector_t p, dp;
+  for(i=-n;i<n;++i) {
+    for(j=-n;j<n;++j) {
+      for(k=-n;k<n;++k) {
+        vector_set(&dp, i*d, j*d, k*d);
+        vector_plus(&p, c, 1.0, &dp);
+        update_cube(va, f, &p, d);
+      }
+    }
+  }        
+}
+
 void update_cube(
   struct vertex_array_t *va, 
-  struct density_field_t *d, 
+  struct density_field_t *f, 
   struct vector_t *p, double dx
 ) {
   struct cube_t cb;
-  int32_t edge_mask, v0, v1, cube_index, i;
-  struct vector_t ep[12], dp;
-  double d1, d2, alpha;
+  uint32_t edge_mask, v0, v1, cube_index, i;
+  struct vector_t ep[12], dp, ep1, ep2;
+  double d1, d2, alpha, e;
+  struct vector_t *a, *b, *c, da, db, n;
 
-  get_cube(&cb, d, p, dx);
+  get_cube(&cb, f, p, dx);
   cube_index = get_cube_index(&cb);
   edge_mask = EDGE_TABLE[cube_index];
 
-  // interpolate the edge points
-  for(i=0;i<12;++i) {
-    if ( edge_mask & (0x1 << i) ) {
-      v0 = EDGE_INDEX[i][0];
-      v1 = EDGE_INDEX[i][1];
-      d1 = cb.d[v0];
-      d2 = cb.d[v1];
-      alpha = d1 / (d2 - d1);
-      vector_minus(&dp, &cb.p[v1], 1.0, &cb.p[v0]);
-      vector_plus(&ep[i], &cb.p[v0], alpha, &dp);
-    }
-  }
-
-  // create faces
   int8_t *tri_index = TRI_TABLE[cube_index];
-  struct vector_t *a, *b, *c, da, db, n;
 
-  while(*tri_index != -1) {
-    a = ep + tri_index[0];
-    b = ep + tri_index[1];
-    c = ep + tri_index[2];
-    
-    vector_minus(&da, b, 1.0, a);
-    vector_minus(&db, c, 1.0, b);
-    vector_cross(&n, &da, &db);
-    
-    vector_copy(va->v + va->tail + 0, a);
-    vector_copy(va->v + va->tail + 1, b);
-    vector_copy(va->v + va->tail + 2, c);
+  if ( *tri_index != -1 ) {
+    memset(ep, 0, sizeof(ep));
 
-    vector_copy(va->n + va->tail + 0, &n);
-    vector_copy(va->n + va->tail + 1, &n);
-    vector_copy(va->n + va->tail + 2, &n);
+    // interpolate the edge points
+    for(i=0;i<12;++i) {
+      if ( edge_mask & (0x1 << i) ) {
+        v0 = EDGE_INDEX[i][0];
+        v1 = EDGE_INDEX[i][1];
+        d1 = cb.d[v0];
+        d2 = cb.d[v1];
+        alpha = d1 / (d1 - d2);
+        vector_minus(&dp, &cb.p[v1], 1.0, &cb.p[v0]);
+        vector_plus(&ep1, &cb.p[v0], alpha - 0.1, &dp);
+        vector_plus(&ep2, &cb.p[v0], alpha + 0.1, &dp);
+        d1 = f->density(f, &ep1);
+        d2 = f->density(f, &ep2);
+        alpha = d1 / (d1 - d2);
+        vector_minus(&dp, &ep2, 1.0, &ep1);
+        vector_plus(&ep[i], &ep1, alpha, &dp);
+        e = fabs(f->density(f, &ep[i]));
+        if ( e > 0.000065 ) {
+          printf("Error: %f\n", e);
+        } 
+      } 
+    }
 
-    tri_index += 3;
-    va->tail += 3;
+    while(*tri_index != -1) {
+      
+      assert(va->tail+3 < va->len);
+      
+      a = ep + tri_index[0];
+      b = ep + tri_index[1];
+      c = ep + tri_index[2];
+      
+      vector_minus(&da, b, 1.0, a);
+      vector_minus(&db, c, 1.0, b);
+      vector_cross(&n, &da, &db);
+      
+      vector_copy(va->v + va->tail + 0, a);
+      vector_copy(va->v + va->tail + 1, b);
+      vector_copy(va->v + va->tail + 2, c);
+      
+      vector_copy(va->n + va->tail + 0, &n);
+      vector_copy(va->n + va->tail + 1, &n);
+      vector_copy(va->n + va->tail + 2, &n);
+      
+      tri_index += 3;
+      va->tail += 3;
+    }
   }
 }
 

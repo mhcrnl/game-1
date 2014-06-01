@@ -25,4 +25,13 @@ void update_cube(
   double dx
 );
 
+void render_field(
+  struct vertex_array_t *va, 
+  struct density_field_t *f, 
+  struct vector_t *c,
+  double d,
+  int n
+);
+
+
 #endif
