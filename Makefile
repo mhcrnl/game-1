@@ -1,13 +1,16 @@
 all: build/game
 
-C_FILES = $(shell ls src/*.c)
-DEPS    = $(C_FILES:src/%.c=build/%.deps)
-OBJS    = $(C_FILES:src/%.c=build/%.o)
-CC      = gcc
+C_FILES       = $(shell ls src/*.c | grep -v src/game.c)
+TEST_FILES    = $(shell ls test-src/*.c)
+TESTS         = $(TEST_FILES:test-src/%.c=build/%)
+DEPS          = $(C_FILES:src/%.c=build/%.deps)
+OBJS          = $(C_FILES:src/%.c=build/%.o)
+CC            = gcc
 
 CFLAGS  = -ggdb -Wall 
 
-all: build build/game build/TAGS $(DEPS)
+all: build build/game build/TAGS $(DEPS) $(TESTS)
+	echo "Tests: $(TESTS)"
 
 clean:
 	rm -rf build
@@ -17,7 +20,14 @@ build/TAGS: $(C_FILES)
 
 build/game: $(OBJS)
 	mkdir -p build
-	$(CC) $(CFLAGS)-o $@ $^ -lGL -lglut -lGLU -lm
+	$(CC) $(CFLAGS) -o $@ src/game.c $(OBJS) -lGL -lglut -lGLU -lm
+
+build/%: test-src/%.c $(OBJS)
+	mkdir -p build
+	$(CC) $(CFLAGS) -o $@ $< $(OBJS) -Isrc -lGL -lglut -lGLU -lm
+
+run-%: build/%
+	$<
 
 build/%.o : src/%.c
 	mkdir -p build

@@ -6,6 +6,7 @@
 #endif
 
 struct density_field_t;
+struct spherical_array_density_field_t;
 
 typedef double (*density_function_t)(struct density_field_t *field, struct vector_t *p);
 
@@ -16,6 +17,7 @@ struct density_field_t {
   normal_function_t normal;
 };
 
-struct density_field_t* spherical_density_field_new(struct vector_t *p, double radius);
+struct density_field_t* spherical_array_density_field_new(int capacity);
+void spherical_array_density_field_push(struct density_field_t *field, struct vector_t *p, double radius);
 
 #endif

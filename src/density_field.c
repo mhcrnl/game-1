@@ -1,27 +1,86 @@
 #include "density_field.h"
 
-#ifndef NEW_H
 #include "new.h"
-#endif
+#include "array_list.h"
 
-struct spherical_density_field_t {
-  struct density_field_t field;
+struct sphere_t {
   struct vector_t p;
   double radius;
 };
 
-double spherical_density(struct density_field_t *field, struct vector_t *p) {
-  struct spherical_density_field_t *s = (struct spherical_density_field_t *)field;
+struct spherical_density_field_t {
+  struct density_field_t field;
+  struct sphere_t sphere;
+};
+
+struct spherical_array_density_field_t {
+  struct density_field_t field;
+  struct array_list_t spheres;
+};
+
+double spherical_density(struct density_field_t *field, struct vector_t *p);
+double spherical_array_density(struct density_field_t *field, struct vector_t *p);
+void spherical_normal(struct density_field_t *field, struct vector_t *p, struct vector_t *n);
+void sample_normal(struct density_field_t *field, struct vector_t *p, struct vector_t *n);
+double sphere_density(struct sphere_t *sphere, struct vector_t *p);
+
+struct density_field_t* spherical_array_density_field_new(int capacity) 
+{
+  struct spherical_array_density_field_t *result = NEW(struct spherical_array_density_field_t);
+  result->field.density = spherical_array_density;
+  result->field.normal = sample_normal;
+  array_list_init(&result->spheres, sizeof(struct sphere_t), capacity);
+  return &result->field;
+}
+
+void spherical_array_density_field_push(struct density_field_t *field, struct vector_t *p, double radius) 
+{
+  struct spherical_array_density_field_t *s = (struct spherical_array_density_field_t *)field;
+  struct sphere_t *sphere = array_list_next(&s->spheres);
+  vector_copy(&sphere->p, p);
+  sphere->radius = radius;
+}
+
+double spherical_array_density(struct density_field_t *field, struct vector_t *p)
+{
+  struct spherical_array_density_field_t *s = (struct spherical_array_density_field_t *)field;
+  uint32_t i;
+  struct sphere_t *sph;
+  double density = 0.0;
+
+  for(i=0;i<s->spheres.tail;++i) {
+    sph = array_list_get(&s->spheres, i);
+    density += sphere_density(sph, p);
+  }
+
+  return density;
+}
+
+struct density_field_t* spherical_density_field_new(struct vector_t *p, double radius) {
+  struct spherical_density_field_t *field = NEW(struct spherical_density_field_t);
+  field->field.density = spherical_density;
+  field->field.normal = spherical_normal;
+  vector_copy(&field->sphere.p, p);
+  field->sphere.radius = radius;
+  return &field->field;
+}
+
+double sphere_density(struct sphere_t *sphere, struct vector_t *p) {
   struct vector_t d;
   double l;
-  vector_minus(&d, p, 1.0, &s->p);
+  vector_minus(&d, p, 1.0, &sphere->p);
   l = vector_length_squared(&d);
-  return (s->radius*s->radius / l) - 1.0;
+  return (sphere->radius*sphere->radius / l) - 1.0;
+}
+
+double spherical_density(struct density_field_t *field, struct vector_t *p) {
+  struct spherical_density_field_t *s = (struct spherical_density_field_t *)field;
+  return sphere_density(&s->sphere, p);
 }
 
 void spherical_normal(struct density_field_t *field, struct vector_t *p, struct vector_t *n) {
   struct spherical_density_field_t *s = (struct spherical_density_field_t *)field;
-  vector_minus(n, p, 1.0, &s->p);
+  vector_minus(n, p, 1.0, &s->sphere.p);
   vector_normalize(n, n);
 }
 
@@ -40,11 +99,3 @@ void sample_normal(struct density_field_t *field, struct vector_t *p, struct vec
   vector_normalize(n, n);
 }
 
-struct density_field_t* spherical_density_field_new(struct vector_t *p, double radius) {
-  struct spherical_density_field_t *field = NEW(struct spherical_density_field_t);
-  field->field.density = spherical_density;
-  field->field.normal = spherical_normal;
-  vector_copy(&field->p, p);
-  field->radius = radius;
-  return &field->field;
-}

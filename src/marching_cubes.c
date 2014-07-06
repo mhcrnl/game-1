@@ -368,7 +368,7 @@ void update_cube(
   struct cube_t cb;
   uint32_t edge_mask, v0, v1, cube_index, i;
   struct vector_t ep[12], dp, ep1, ep2;
-  double d1, d2, alpha;
+  double d1, d2, alpha1, alpha2;
   struct vector_t *a, *b, *c;
 
   get_cube(&cb, f, p, dx);
@@ -387,15 +387,23 @@ void update_cube(
         v1 = EDGE_INDEX[i][1];
         d1 = cb.d[v0];
         d2 = cb.d[v1];
-        alpha = d1 / (d1 - d2);
+        alpha1 = d1 / (d1 - d2);
+        assert(alpha1 <= 1.0);
+        assert(alpha1 >= -1.0);
         vector_minus(&dp, &cb.p[v1], 1.0, &cb.p[v0]);
-        vector_plus(&ep1, &cb.p[v0], alpha - 0.1, &dp);
-        vector_plus(&ep2, &cb.p[v0], alpha + 0.1, &dp);
-        d1 = f->density(f, &ep1);
-        d2 = f->density(f, &ep2);
-        alpha = d1 / (d1 - d2);
-        vector_minus(&dp, &ep2, 1.0, &ep1);
-        vector_plus(&ep[i], &ep1, alpha, &dp);
+        vector_plus(&ep[i], &cb.p[v0], alpha1, &dp);
+
+        if ( 0 ) {
+          // second round of estimation, can lead to large errors in some cases
+          vector_minus(&dp, &cb.p[v1], 1.0, &cb.p[v0]);
+          vector_plus(&ep1, &cb.p[v0], alpha1 - 0.1, &dp);
+          vector_plus(&ep2, &cb.p[v0], alpha1 + 0.1, &dp);
+          d1 = f->density(f, &ep1);
+          d2 = f->density(f, &ep2);
+          alpha2 = d1 / (d1 - d2);
+          vector_minus(&dp, &ep2, 1.0, &ep1);
+          vector_plus(&ep[i], &ep1, alpha2, &dp);
+        }
       } 
     }
 

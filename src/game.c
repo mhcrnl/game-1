@@ -187,13 +187,22 @@ void display(void) {
 
 void init(void) {
 
+  struct vector_t p0, p1;
+
   game_state.quit = 0;
   game_state.box = vertex_array_new(36);
   cube(game_state.box, &ZERO, 5);
   game_state.va_tri  = vertex_array_new(100000);
   game_state.va_lines  = vertex_array_new(100000);
-  game_state.field = spherical_density_field_new(&ZERO, 10);
-  render_field(game_state.va_tri, game_state.va_lines, game_state.field, &ZERO, 2, 20);
+  game_state.field = spherical_array_density_field_new(10);
+
+  vector_set(&p0, -20, 0, 0);
+  spherical_array_density_field_push(game_state.field, &p0, 10);
+
+  vector_set(&p0, 20, 0, 0);
+  spherical_array_density_field_push(game_state.field, &p1, 10);
+
+  render_field(game_state.va_tri, game_state.va_lines, game_state.field, &ZERO, 2, 30);
   //  render_grid(game_state.va_lines, &ZERO, 0.5, 20);
 
   vector_set(&game_state.pos, 0, 0, -10);
