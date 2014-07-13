@@ -1,17 +1,18 @@
-#include <GL/glew.h>
-#include <GL/freeglut.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 
 #include "game.h"
+#include "gl.h"
+#include "texture.h"
 #include "cube.h"
 #include "vertex_array.h"
 #include "new.h"
 #include "marching_cubes.h"
 #include "draw.h"
 #include "grid.h"
+#include "tga.h"
 
 void glutLeaveMainLoop();
 
@@ -228,6 +229,9 @@ void fgDeinitialize( void );
 
 int main(int argc, char **argv)
 {
+  struct image_t *img = load_tga("XNA_Ezekiel_Stane/Ezekiel_Stane_A.tga");
+  struct texture_t *tex = new_texture(img);
+
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutInitWindowSize(1000, 1000);

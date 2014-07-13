@@ -4,8 +4,10 @@
 struct vertex_array_t {
   int len;
   int tail;
-  struct vector_t *v;
-  struct vector_t *n;
+  struct texture_t *tex;
+  struct vector_t  *v;
+  struct vector_t  *n;
+  struct vector_t  *st;
 };
 
 struct vertex_array_t *vertex_array_new(int len);

@@ -20,7 +20,7 @@ build/TAGS: $(C_FILES)
 
 build/game: $(OBJS)
 	mkdir -p build
-	$(CC) $(CFLAGS) -o $@ src/game.c $(OBJS) -lGL -lglut -lGLU -lm
+	$(CC) $(CFLAGS) -o $@ src/game.c $(OBJS) -lGL -lglut -lGLU -lGLEW -lm
 
 build/%: test-src/%.c $(OBJS)
 	mkdir -p build
