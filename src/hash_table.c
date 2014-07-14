@@ -58,7 +58,7 @@ static inline int32_t hash_table_key_eq(
   uint32_t len = ht->key_size;
   int32_t *key1 = hash_table_key(ht, index);
   int32_t *key2 = key;
-  while ( len > 4 ) {
+  while ( len >= 4 ) {
     if ( *key1 != *key2 ) {
       return 0;
     }
@@ -134,6 +134,10 @@ static inline void hash_table_assign_value(struct hash_table_t *ht, uint32_t ind
   memcpy(ht->values + (index * ht->value_size), value, ht->value_size);
 }
 
+static inline void hash_table_assign_key(struct hash_table_t *ht, uint32_t index, void *key) {
+  memcpy(ht->keys + (index * ht->key_size), key, ht->key_size);
+}
+
 uint32_t hash_table_hash_value(
   uint32_t key_size, 
   uint8_t  *key
@@ -165,6 +169,7 @@ void hash_table_insert(
     } else if ( ! hash_table_is_occupied(ht, index) && ! hash_table_is_dirty(ht, index) ) {
       ht->occupied += 1;
       hash_table_set_occupied(ht, index);
+      hash_table_assign_key(ht, index, key);
       hash_table_assign_value(ht, index, value);
       return;
     } else {
@@ -180,7 +185,7 @@ void* hash_table_lookup(
 ) {
   uint32_t index = hash_table_hash_value(ht->key_size, key);
   while(1) {
-    if ( hash_table_key_eq(ht, index, key) == 0 ) {
+    if ( hash_table_key_eq(ht, index, key) ) {
       return hash_table_value(ht, index);
     } else if ( hash_table_is_dirty(ht, index) ) {
       index = (index + 1) % ht->len ;

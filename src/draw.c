@@ -11,19 +11,19 @@ void gl_normal(struct vector_t *v) {
 }
 
 void gl_tex_coord(struct vector_t *v) {
-  glTexCoord(v->v[0]/v->v[3], v->v[1]/v->v[3]);
+  glTexCoord2d(v->v[0]/v->v[3], v->v[1]/v->v[3]);
 }
 
 void vertex_array_draw_tri(struct vertex_array_t *va) {
   int i;
-  if ( va->t != 0 ) {
+  if ( va->tex != 0 ) {
     
   }
   glBegin(GL_TRIANGLES);
   for(i=0; i<va->tail; i++) {
     gl_normal(va->n + i);
     gl_vertex(va->v + i);
-    if ( va->t != 0 ) {
+    if ( va->tex != 0 ) {
       gl_tex_coord(va->st + i);
     }
   }

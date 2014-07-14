@@ -1,6 +1,13 @@
 #ifndef STD_H
 #define STD_H
 
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
 #define CHECK_RETURN(cond, ret) if ( cond ) { return ret; };
 #define CHECK_GOTO(cond, error) if ( cond ) { goto error; };
 #define MIN(x, y) (x <= y ? x : y)

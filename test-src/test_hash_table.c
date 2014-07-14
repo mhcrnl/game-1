@@ -11,7 +11,6 @@ int main() {
     value = i;
     hash_table_insert(ht, &key, &value);
     rvalue = (uint32_t *)hash_table_lookup(ht, &key);
-    assert(value != 0);
     assert(value == *rvalue);
   }
   return 0;

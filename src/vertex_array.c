@@ -12,10 +12,10 @@ struct vertex_array_t *vertex_array_new(int len) {
   struct vertex_array_t *vertex_array = NEW(struct vertex_array_t);
   vertex_array->len  = len;
   vertex_array->tail = 0;
-  vertex_array->v  = NEW_ARRAY(struct vector_t, len);
-  vertex_array->n  = NEW_ARRAY(struct vector_t, len);
-  vertex_array->st = NEW_ARRAY(struct vector_t, len);
-  vertex_array->t  = 0;
+  vertex_array->v   = NEW_ARRAY(struct vector_t, len);
+  vertex_array->n   = NEW_ARRAY(struct vector_t, len);
+  vertex_array->st  = NEW_ARRAY(struct vector_t, len);
+  vertex_array->tex = 0;
   return vertex_array;
 }
 

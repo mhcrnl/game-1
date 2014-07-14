@@ -2,12 +2,13 @@ all: build/game
 
 C_FILES       = $(shell ls src/*.c | grep -v src/game.c)
 TEST_FILES    = $(shell ls test-src/*.c)
-TESTS         = $(TEST_FILES:test-src/%.c=build/%)
+TESTS         = $(TEST_FILES:test-src/%.c=run-%)
 DEPS          = $(C_FILES:src/%.c=build/%.deps)
 OBJS          = $(C_FILES:src/%.c=build/%.o)
 CC            = gcc
 
-CFLAGS  = -ggdb -Wall 
+CFLAGS  = -ggdb -Wall -Isrc
+LDFLAGS = -lGL -lglut -lGLU -lGLEW -lm -l3ds
 
 all: build build/game build/TAGS $(DEPS) $(TESTS)
 	echo "Tests: $(TESTS)"
@@ -20,11 +21,11 @@ build/TAGS: $(C_FILES)
 
 build/game: $(OBJS)
 	mkdir -p build
-	$(CC) $(CFLAGS) -o $@ src/game.c $(OBJS) -lGL -lglut -lGLU -lGLEW -lm
+	$(CC) $(CFLAGS) -o $@ src/game.c $(OBJS) $(LDFLAGS)
 
 build/%: test-src/%.c $(OBJS)
 	mkdir -p build
-	$(CC) $(CFLAGS) -o $@ $< $(OBJS) -Isrc -lGL -lglut -lGLU -lm
+	$(CC) $(CFLAGS) -o $@ $< $(OBJS) $(LDFLAGS)
 
 run-%: build/%
 	$<
